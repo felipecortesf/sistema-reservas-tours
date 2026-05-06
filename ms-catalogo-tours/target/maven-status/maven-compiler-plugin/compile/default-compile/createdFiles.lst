@@ -1,1 +1,7 @@
-com/reservatours/ms_catalogo_tours/MsCatalogoToursApplication.class
+com/reservatours/mscatalogotours/MsCatalogoToursApplication.class
+com/reservatours/mscatalogotours/service/impl/TourServiceImpl.class
+com/reservatours/mscatalogotours/repository/TourRepository.class
+com/reservatours/mscatalogotours/model/Tour.class
+com/reservatours/mscatalogotours/service/TourService.class
+com/reservatours/mscatalogotours/controller/TourController.class
+com/reservatours/mscatalogotours/dto/TourDto.class
