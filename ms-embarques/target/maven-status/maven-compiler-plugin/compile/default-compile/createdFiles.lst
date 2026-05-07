@@ -1,0 +1,7 @@
+com/reservatours/msembarques/service/impl/EmbarqueServiceImpl.class
+com/reservatours/msembarques/MsEmbarquesApplication.class
+com/reservatours/msembarques/dto/EmbarqueDto.class
+com/reservatours/msembarques/model/Embarque.class
+com/reservatours/msembarques/repository/EmbarqueRepository.class
+com/reservatours/msembarques/controller/EmbarqueController.class
+com/reservatours/msembarques/service/EmbarqueService.class
