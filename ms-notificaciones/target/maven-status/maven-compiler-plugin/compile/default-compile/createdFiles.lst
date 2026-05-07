@@ -1,0 +1,7 @@
+com/reservatours/msnotificaciones/controller/NotificacionController.class
+com/reservatours/msnotificaciones/model/Notificacion.class
+com/reservatours/msnotificaciones/service/NotificacionService.class
+com/reservatours/msnotificaciones/MsNotificacionesApplication.class
+com/reservatours/msnotificaciones/service/impl/NotificacionServiceImpl.class
+com/reservatours/msnotificaciones/repository/NotificacionRepository.class
+com/reservatours/msnotificaciones/dto/NotificacionDto.class
