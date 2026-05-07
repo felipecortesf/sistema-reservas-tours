@@ -1,5 +1,6 @@
 package com.reservatours.msusuarios.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,7 +18,8 @@ public class Usuario {
     String password;
     String telefono;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     Rol rol;
 }
