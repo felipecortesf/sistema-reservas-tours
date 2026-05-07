@@ -5,6 +5,8 @@ import com.reservatours.msnotificaciones.model.Notificacion;
 import com.reservatours.msnotificaciones.repository.NotificacionRepository;
 import com.reservatours.msnotificaciones.service.NotificacionService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificacionServiceImpl implements NotificacionService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificacionServiceImpl.class);
     private final NotificacionRepository repository;
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -39,59 +42,63 @@ public class NotificacionServiceImpl implements NotificacionService {
 
     @Override
     public List<NotificacionDto> findAll() {
+        log.info("Consultando todas las notificaciones");
         return repository.findAll().stream().map(this::toDto).toList();
     }
 
     @Override
     public NotificacionDto findById(Long id) {
-        return repository.findById(id).map(this::toDto).orElse(null);
+        log.info("Buscando notificacion con id: {}", id);
+        return repository.findById(id).map(this::toDto).orElseGet(() -> {
+            log.warn("Notificacion no encontrada con id: {}", id);
+            return null;
+        });
     }
 
     @Override
     public List<NotificacionDto> findByTelefono(String telefono) {
-        return repository.findByDestinatarioTelefono(telefono)
-                .stream().map(this::toDto).toList();
+        log.info("Buscando notificaciones para telefono: {}", telefono);
+        return repository.findByDestinatarioTelefono(telefono).stream().map(this::toDto).toList();
     }
 
     @Override
     public List<NotificacionDto> findByReservaId(Long reservaId) {
-        return repository.findByReservaId(reservaId)
-                .stream().map(this::toDto).toList();
+        log.info("Buscando notificaciones para reserva: {}", reservaId);
+        return repository.findByReservaId(reservaId).stream().map(this::toDto).toList();
     }
 
     @Override
     public NotificacionDto enviarNotificacion(NotificacionDto dto) {
+        log.info("Enviando notificacion a: {}", dto.getDestinatarioTelefono());
         String url = "https://graph.facebook.com/v25.0/" + phoneNumberId + "/messages";
-
         String mensaje = String.format(
             "{\"messaging_product\":\"whatsapp\",\"to\":\"%s\",\"type\":\"text\",\"text\":{\"body\":\"%s\"}}",
-            dto.getDestinatarioTelefono(),
-            dto.getMensaje()
+            dto.getDestinatarioTelefono(), dto.getMensaje()
         );
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(whatsappToken);
-
-        HttpEntity<String> entity = new HttpEntity<>(mensaje, headers);
         try {
-            restTemplate.postForEntity(url, entity, String.class);
+            restTemplate.postForEntity(url, new HttpEntity<>(mensaje, headers), String.class);
             dto.setEstado("ENVIADO");
+            log.info("Notificacion enviada exitosamente a: {}", dto.getDestinatarioTelefono());
         } catch (Exception e) {
             dto.setEstado("ERROR");
-            System.out.println("Error enviando WhatsApp: " + e.getMessage());
+            log.error("Error enviando notificacion a {}: {}", dto.getDestinatarioTelefono(), e.getMessage());
         }
-
         dto.setFechaEnvio(LocalDateTime.now());
         return toDto(repository.save(toEntity(dto)));
     }
 
     @Override
     public Boolean deleteById(Long id) {
+        log.info("Eliminando notificacion con id: {}", id);
         if (repository.existsById(id)) {
             repository.deleteById(id);
+            log.info("Notificacion eliminada con id: {}", id);
             return true;
         }
+        log.warn("Notificacion no encontrada con id: {}", id);
         return false;
     }
 }
