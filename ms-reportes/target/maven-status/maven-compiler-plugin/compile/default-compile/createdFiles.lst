@@ -1,0 +1,7 @@
+com/reservatours/msreportes/dto/ReporteDto.class
+com/reservatours/msreportes/service/ReporteService.class
+com/reservatours/msreportes/repository/ReporteRepository.class
+com/reservatours/msreportes/controller/ReporteController.class
+com/reservatours/msreportes/MsReportesApplication.class
+com/reservatours/msreportes/service/impl/ReporteServiceImpl.class
+com/reservatours/msreportes/model/Reporte.class
