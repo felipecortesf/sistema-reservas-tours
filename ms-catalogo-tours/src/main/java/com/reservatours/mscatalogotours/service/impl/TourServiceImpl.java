@@ -5,6 +5,8 @@ import com.reservatours.mscatalogotours.model.Tour;
 import com.reservatours.mscatalogotours.repository.TourRepository;
 import com.reservatours.mscatalogotours.service.TourService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TourServiceImpl implements TourService {
 
+    private static final Logger log = LoggerFactory.getLogger(TourServiceImpl.class);
     private final TourRepository repository;
 
     private TourDto toDto(Tour t) {
@@ -28,41 +31,71 @@ public class TourServiceImpl implements TourService {
 
     @Override
     public List<TourDto> findAll() {
-        return repository.findAll().stream().map(this::toDto).toList();
+        log.info("Consultando todos los tours");
+        List<TourDto> tours = repository.findAll().stream().map(this::toDto).toList();
+        log.info("Total tours encontrados: {}", tours.size());
+        return tours;
     }
 
     @Override
     public List<TourDto> findActivos() {
-        return repository.findByActivoTrue().stream().map(this::toDto).toList();
+        log.info("Consultando tours activos");
+        List<TourDto> tours = repository.findByActivoTrue().stream().map(this::toDto).toList();
+        log.info("Total tours activos: {}", tours.size());
+        return tours;
     }
 
     @Override
     public TourDto findById(Long id) {
-        return repository.findById(id).map(this::toDto).orElse(null);
+        log.info("Buscando tour con id: {}", id);
+        return repository.findById(id).map(t -> {
+            log.info("Tour encontrado: {}", t.getNombre());
+            return toDto(t);
+        }).orElseGet(() -> {
+            log.warn("Tour no encontrado con id: {}", id);
+            return null;
+        });
     }
 
     @Override
     public TourDto save(TourDto dto) {
-        return toDto(repository.save(toEntity(dto)));
+        log.info("Guardando tour: {}", dto.getNombre());
+        try {
+            TourDto saved = toDto(repository.save(toEntity(dto)));
+            log.info("Tour guardado exitosamente con id: {}", saved.getId());
+            return saved;
+        } catch (Exception e) {
+            log.error("Error al guardar tour: {}", e.getMessage());
+            throw new RuntimeException("Error al guardar tour: " + e.getMessage());
+        }
     }
 
     @Override
     public Boolean deleteById(Long id) {
+        log.info("Eliminando tour con id: {}", id);
         if (repository.existsById(id)) {
             repository.deleteById(id);
+            log.info("Tour eliminado exitosamente con id: {}", id);
             return true;
         }
+        log.warn("No se encontro tour para eliminar con id: {}", id);
         return false;
     }
 
     @Override
     public TourDto reducirCupo(Long id) {
+        log.info("Reduciendo cupo del tour con id: {}", id);
         return repository.findById(id).map(tour -> {
             if (tour.getCuposDisponibles() > 0) {
                 tour.setCuposDisponibles(tour.getCuposDisponibles() - 1);
+                log.info("Cupo reducido. Cupos restantes: {}", tour.getCuposDisponibles());
                 return toDto(repository.save(tour));
             }
+            log.warn("No hay cupos disponibles para tour id: {}", id);
             return null;
-        }).orElse(null);
+        }).orElseGet(() -> {
+            log.warn("Tour no encontrado con id: {}", id);
+            return null;
+        });
     }
 }
