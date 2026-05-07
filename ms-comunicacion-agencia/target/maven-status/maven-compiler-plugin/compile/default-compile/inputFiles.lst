@@ -1,0 +1,7 @@
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-comunicacion-agencia/src/main/java/com/reservatours/mscomunicacionagencia/MsComunicacionAgenciaApplication.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-comunicacion-agencia/src/main/java/com/reservatours/mscomunicacionagencia/controller/MensajeController.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-comunicacion-agencia/src/main/java/com/reservatours/mscomunicacionagencia/dto/MensajeDto.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-comunicacion-agencia/src/main/java/com/reservatours/mscomunicacionagencia/model/Mensaje.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-comunicacion-agencia/src/main/java/com/reservatours/mscomunicacionagencia/repository/MensajeRepository.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-comunicacion-agencia/src/main/java/com/reservatours/mscomunicacionagencia/service/MensajeService.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-comunicacion-agencia/src/main/java/com/reservatours/mscomunicacionagencia/service/impl/MensajeServiceImpl.java
