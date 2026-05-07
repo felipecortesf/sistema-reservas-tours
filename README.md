@@ -138,3 +138,12 @@ Abrir: http://localhost:8761
 - POST /api/v1/mensajes/cliente-pregunta
 - POST /api/v1/mensajes/kary-responde
 - POST /api/v1/mensajes/kary-alerta-felipe
+
+## Gestión del Proyecto
+- **Trello:** https://trello.com/b/PB5uIzQ0/sistema-reservas-tours-dsy1103
+
+## Comunicación entre Microservicios
+- ms-reservas → ms-catalogo-tours (OpenFeign)
+- ms-comunicacion-agencia → ms-reservas (OpenFeign)
+- ms-notificaciones → ms-reservas (OpenFeign)
+- ms-embarques → ms-catalogo-tours (OpenFeign)
