@@ -1,4 +1,5 @@
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-usuarios/src/main/java/com/reservatours/msusuarios/MsUsuariosApplication.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-usuarios/src/main/java/com/reservatours/msusuarios/config/JacksonConfig.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-usuarios/src/main/java/com/reservatours/msusuarios/config/SwaggerConfig.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-usuarios/src/main/java/com/reservatours/msusuarios/controller/UsuarioController.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-usuarios/src/main/java/com/reservatours/msusuarios/dto/UsuarioDto.java
