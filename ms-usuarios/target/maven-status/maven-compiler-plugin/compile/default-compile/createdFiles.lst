@@ -1,8 +1,10 @@
+com/reservatours/msusuarios/exception/GlobalExceptionHandler.class
 com/reservatours/msusuarios/repository/UsuarioRepository.class
 com/reservatours/msusuarios/service/impl/UsuarioServiceImpl.class
 com/reservatours/msusuarios/service/UsuarioService.class
 com/reservatours/msusuarios/model/Usuario.class
 com/reservatours/msusuarios/MsUsuariosApplication.class
 com/reservatours/msusuarios/model/Rol.class
+com/reservatours/msusuarios/config/SwaggerConfig.class
 com/reservatours/msusuarios/dto/UsuarioDto.class
 com/reservatours/msusuarios/controller/UsuarioController.class

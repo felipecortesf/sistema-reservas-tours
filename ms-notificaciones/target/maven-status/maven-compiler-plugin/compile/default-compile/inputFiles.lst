@@ -1,6 +1,9 @@
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-notificaciones/src/main/java/com/reservatours/msnotificaciones/MsNotificacionesApplication.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-notificaciones/src/main/java/com/reservatours/msnotificaciones/client/ReservaClient.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-notificaciones/src/main/java/com/reservatours/msnotificaciones/config/SwaggerConfig.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-notificaciones/src/main/java/com/reservatours/msnotificaciones/controller/NotificacionController.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-notificaciones/src/main/java/com/reservatours/msnotificaciones/dto/NotificacionDto.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-notificaciones/src/main/java/com/reservatours/msnotificaciones/exception/GlobalExceptionHandler.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-notificaciones/src/main/java/com/reservatours/msnotificaciones/model/Notificacion.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-notificaciones/src/main/java/com/reservatours/msnotificaciones/repository/NotificacionRepository.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-notificaciones/src/main/java/com/reservatours/msnotificaciones/service/NotificacionService.java

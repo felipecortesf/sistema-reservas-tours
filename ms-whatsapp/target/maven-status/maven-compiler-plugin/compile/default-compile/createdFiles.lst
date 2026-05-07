@@ -1,7 +1,9 @@
+com/reservatours/mswhatsapp/config/SwaggerConfig.class
 com/reservatours/mswhatsapp/repository/MensajeWhatsappRepository.class
 com/reservatours/mswhatsapp/MsWhatsappApplication.class
 com/reservatours/mswhatsapp/dto/MensajeWhatsappDto.class
 com/reservatours/mswhatsapp/service/WhatsappService.class
+com/reservatours/mswhatsapp/exception/GlobalExceptionHandler.class
 com/reservatours/mswhatsapp/service/impl/WhatsappServiceImpl.class
 com/reservatours/mswhatsapp/controller/WhatsappController.class
 com/reservatours/mswhatsapp/model/MensajeWhatsapp.class
