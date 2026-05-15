@@ -4,13 +4,15 @@ import com.reservatours.mswhatsapp.dto.MensajeWhatsappDto;
 import com.reservatours.mswhatsapp.model.MensajeWhatsapp;
 import com.reservatours.mswhatsapp.repository.MensajeWhatsappRepository;
 import com.reservatours.mswhatsapp.service.WhatsappService;
+import com.twilio.Twilio;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,19 +22,27 @@ public class WhatsappServiceImpl implements WhatsappService {
 
     private static final Logger log = LoggerFactory.getLogger(WhatsappServiceImpl.class);
     private final MensajeWhatsappRepository repository;
-    private final RestTemplate restTemplate = new RestTemplate();
 
-    @Value("${whatsapp.token}")
-    private String whatsappToken;
+    @Value("${twilio.account.sid}")
+    private String accountSid;
 
-    @Value("${whatsapp.phone.number.id}")
-    private String phoneNumberId;
+    @Value("${twilio.auth.token}")
+    private String authToken;
+
+    @Value("${twilio.whatsapp.from}")
+    private String fromNumber;
+
+    @Value("${telefono.kary}")
+    private String telefonoKary;
 
     @Value("${whatsapp.verify.token}")
     private String verifyToken;
 
-    @Value("${telefono.kary}")
-    private String telefonoKary;
+    @PostConstruct
+    public void init() {
+        Twilio.init(accountSid, authToken);
+        log.info("Twilio inicializado correctamente");
+    }
 
     private MensajeWhatsappDto toDto(MensajeWhatsapp m) {
         return new MensajeWhatsappDto(m.getId(), m.getTelefonoRemitente(),
@@ -64,24 +74,20 @@ public class WhatsappServiceImpl implements WhatsappService {
 
     @Override
     public MensajeWhatsappDto enviarMensaje(String telefono, String mensaje) {
-        log.info("Enviando mensaje WhatsApp a: {}", telefono);
-        String url = "https://graph.facebook.com/v25.0/" + phoneNumberId + "/messages";
-        String body = String.format(
-            "{\"messaging_product\":\"whatsapp\",\"to\":\"%s\",\"type\":\"text\",\"text\":{\"body\":\"%s\"}}",
-            telefono, mensaje.replace("\"", "'").replace("\n", "\\n")
-        );
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(whatsappToken);
+        log.info("Enviando mensaje WhatsApp via Twilio a: {}", telefono);
         String estado = "ENVIADO";
         try {
-            restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
-            log.info("Mensaje enviado exitosamente a: {}", telefono);
+            Message message = Message.creator(
+                new PhoneNumber("whatsapp:+" + telefono),
+                new PhoneNumber(fromNumber),
+                mensaje
+            ).create();
+            log.info("Mensaje enviado exitosamente. SID: {}", message.getSid());
         } catch (Exception e) {
             estado = "ERROR";
             log.error("Error enviando mensaje a {}: {}", telefono, e.getMessage());
         }
-        MensajeWhatsapp m = new MensajeWhatsapp(null, phoneNumberId, telefono,
+        MensajeWhatsapp m = new MensajeWhatsapp(null, fromNumber, "whatsapp:+" + telefono,
                 "Sistema", mensaje, "TEXTO", "SALIENTE",
                 estado, true, LocalDateTime.now());
         return toDto(repository.save(m));
@@ -90,12 +96,11 @@ public class WhatsappServiceImpl implements WhatsappService {
     @Override
     public MensajeWhatsappDto recibirMensaje(String telefono, String nombre, String mensaje) {
         log.info("Mensaje recibido de: {} ({})", nombre, telefono);
-        MensajeWhatsapp m = new MensajeWhatsapp(null, telefono, phoneNumberId,
+        MensajeWhatsapp m = new MensajeWhatsapp(null, telefono, fromNumber,
                 nombre, mensaje, "TEXTO", "ENTRANTE",
                 "RECIBIDO", false, LocalDateTime.now());
         MensajeWhatsapp saved = repository.save(m);
-        String mensajeKary = String.format(
-            "Mensaje de cliente\\n%s (%s):\\n%s", nombre, telefono, mensaje);
+        String mensajeKary = String.format("Mensaje de cliente\n%s (%s):\n%s", nombre, telefono, mensaje);
         enviarMensaje(telefonoKary, mensajeKary);
         log.info("Mensaje reenviado a Kary desde: {}", telefono);
         return toDto(saved);
