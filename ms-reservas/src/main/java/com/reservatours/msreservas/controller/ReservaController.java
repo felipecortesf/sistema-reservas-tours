@@ -2,7 +2,9 @@ package com.reservatours.msreservas.controller;
 
 import com.reservatours.msreservas.dto.ReservaDto;
 import com.reservatours.msreservas.service.ReservaService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -35,8 +37,8 @@ public class ReservaController {
     }
 
     @PostMapping
-    public ResponseEntity<ReservaDto> save(@RequestBody ReservaDto dto) {
-        return ResponseEntity.ok(service.save(dto));
+    public ResponseEntity<ReservaDto> save(@Valid @RequestBody ReservaDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(dto));
     }
 
     @DeleteMapping("/{id}")
@@ -45,7 +47,7 @@ public class ReservaController {
     }
 
     @PostMapping("/notificar")
-    public ResponseEntity<String> notificarManual() {
+    public ResponseEntity<String> notificar() {
         service.enviarNotificacionesDiaSiguiente();
         return ResponseEntity.ok("Notificaciones enviadas");
     }
