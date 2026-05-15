@@ -1,0 +1,6 @@
+
+# Archivos sensibles
+**/target/
+.wrangler/
+**/.wrangler/
+**/application.properties
