@@ -1,9 +1,0 @@
-/Users/felipecortes/Documents/sistema-reservas-tours/ms-whatsapp/src/main/java/com/reservatours/mswhatsapp/MsWhatsappApplication.java
-/Users/felipecortes/Documents/sistema-reservas-tours/ms-whatsapp/src/main/java/com/reservatours/mswhatsapp/config/SwaggerConfig.java
-/Users/felipecortes/Documents/sistema-reservas-tours/ms-whatsapp/src/main/java/com/reservatours/mswhatsapp/controller/WhatsappController.java
-/Users/felipecortes/Documents/sistema-reservas-tours/ms-whatsapp/src/main/java/com/reservatours/mswhatsapp/dto/MensajeWhatsappDto.java
-/Users/felipecortes/Documents/sistema-reservas-tours/ms-whatsapp/src/main/java/com/reservatours/mswhatsapp/exception/GlobalExceptionHandler.java
-/Users/felipecortes/Documents/sistema-reservas-tours/ms-whatsapp/src/main/java/com/reservatours/mswhatsapp/model/MensajeWhatsapp.java
-/Users/felipecortes/Documents/sistema-reservas-tours/ms-whatsapp/src/main/java/com/reservatours/mswhatsapp/repository/MensajeWhatsappRepository.java
-/Users/felipecortes/Documents/sistema-reservas-tours/ms-whatsapp/src/main/java/com/reservatours/mswhatsapp/service/WhatsappService.java
-/Users/felipecortes/Documents/sistema-reservas-tours/ms-whatsapp/src/main/java/com/reservatours/mswhatsapp/service/impl/WhatsappServiceImpl.java
