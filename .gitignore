@@ -4,3 +4,4 @@
 .wrangler/
 **/.wrangler/
 **/application.properties
+.env
