@@ -7,7 +7,6 @@ import com.reservatours.mswhatsapp.service.WhatsappService;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,12 +36,6 @@ public class WhatsappServiceImpl implements WhatsappService {
 
     @Value("${whatsapp.verify.token}")
     private String verifyToken;
-
-    @PostConstruct
-    public void init() {
-        Twilio.init(accountSid, authToken);
-        log.info("Twilio inicializado correctamente");
-    }
 
     private MensajeWhatsappDto toDto(MensajeWhatsapp m) {
         return new MensajeWhatsappDto(m.getId(), m.getTelefonoRemitente(),
@@ -77,6 +70,7 @@ public class WhatsappServiceImpl implements WhatsappService {
         log.info("Enviando mensaje WhatsApp via Twilio a: {}", telefono);
         String estado = "ENVIADO";
         try {
+            Twilio.init(accountSid, authToken);
             Message message = Message.creator(
                 new PhoneNumber("whatsapp:+" + telefono),
                 new PhoneNumber(fromNumber),
