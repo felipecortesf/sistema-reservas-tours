@@ -3,6 +3,7 @@
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-catalogo-tours/src/main/java/com/reservatours/mscatalogotours/controller/TourController.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-catalogo-tours/src/main/java/com/reservatours/mscatalogotours/dto/TourDto.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-catalogo-tours/src/main/java/com/reservatours/mscatalogotours/exception/GlobalExceptionHandler.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-catalogo-tours/src/main/java/com/reservatours/mscatalogotours/exception/ResourceNotFoundException.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-catalogo-tours/src/main/java/com/reservatours/mscatalogotours/model/Tour.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-catalogo-tours/src/main/java/com/reservatours/mscatalogotours/repository/TourRepository.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-catalogo-tours/src/main/java/com/reservatours/mscatalogotours/service/TourService.java
