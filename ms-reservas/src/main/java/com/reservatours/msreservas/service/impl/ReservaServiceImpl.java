@@ -5,18 +5,18 @@ import com.reservatours.msreservas.model.Reserva;
 import com.reservatours.msreservas.repository.ReservaRepository;
 import com.reservatours.msreservas.service.ReservaService;
 import com.reservatours.msreservas.exception.ResourceNotFoundException;
+import com.reservatours.msreservas.client.WhatsappClient;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -24,13 +24,7 @@ public class ReservaServiceImpl implements ReservaService {
 
     private static final Logger log = LoggerFactory.getLogger(ReservaServiceImpl.class);
     private final ReservaRepository repository;
-    private final RestTemplate restTemplate = new RestTemplate();
-
-    @Value("${whatsapp.token}")
-    private String whatsappToken;
-
-    @Value("${whatsapp.phone.number.id}")
-    private String phoneNumberId;
+    private final WhatsappClient whatsappClient;
 
     private ReservaDto toDto(Reserva r) {
         return new ReservaDto(r.getId(), r.getClienteNombre(), r.getClienteTelefono(),
@@ -122,21 +116,20 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     private void enviarMensajeWhatsApp(Reserva reserva) {
-        String url = "https://graph.facebook.com/v25.0/" + phoneNumberId + "/messages";
-        String mensaje = String.format(
-            "{\"messaging_product\":\"whatsapp\",\"to\":\"%s\",\"type\":\"text\",\"text\":{\"body\":\"Hola %s! Le recordamos que su tour *%s* es mañana.\\n\\n🕐 Hora de embarque: *%s*\\n📍 Punto de encuentro: *%s*\\n👤 Guía: *%s*\\n\\nCualquier consulta estamos disponibles. ¡Hasta mañana!\"}}",
-            reserva.getClienteTelefono(), reserva.getClienteNombre(),
-            reserva.getTourNombre(), reserva.getHoraEmbarque(),
-            reserva.getPuntoEncuentro(), reserva.getNombreGuia()
-        );
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(whatsappToken);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("telefono", reserva.getClienteTelefono());
+        payload.put("nombre", reserva.getClienteNombre());
+        payload.put("tour", reserva.getTourNombre());
+        payload.put("hora", reserva.getHoraEmbarque());
+        payload.put("puntoEncuentro", reserva.getPuntoEncuentro());
+        payload.put("guia", reserva.getNombreGuia());
+
         try {
-            restTemplate.postForEntity(url, new HttpEntity<>(mensaje, headers), String.class);
-            log.info("WhatsApp enviado a: {}", reserva.getClienteTelefono());
+            log.info("Enviando peticion remota via OpenFeign a ms-whatsapp para el cliente: {}", reserva.getClienteNombre());
+            whatsappClient.enviarMensaje(payload);
+            log.info("Notificacion remota procesada exitosamente por ms-whatsapp");
         } catch (Exception e) {
-            log.error("Error enviando WhatsApp a {}: {}", reserva.getClienteTelefono(), e.getMessage());
+            log.error("Error en la comunicacion remota con ms-whatsapp para {}: {}", reserva.getClienteTelefono(), e.getMessage());
         }
     }
 }
