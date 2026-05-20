@@ -1,3 +1,4 @@
+com/reservatours/msusuarios/exception/ResourceNotFoundException.class
 com/reservatours/msusuarios/exception/GlobalExceptionHandler.class
 com/reservatours/msusuarios/repository/UsuarioRepository.class
 com/reservatours/msusuarios/MsUsuariosApplication.class
