@@ -4,10 +4,12 @@ import com.reservatours.mspagos.dto.PagoDto;
 import com.reservatours.mspagos.model.Pago;
 import com.reservatours.mspagos.repository.PagoRepository;
 import com.reservatours.mspagos.service.PagoService;
+import com.reservatours.mspagos.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,46 +33,43 @@ public class PagoServiceImpl implements PagoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PagoDto> findAll() {
         log.info("Consultando todos los pagos");
-        List<PagoDto> pagos = repository.findAll().stream().map(this::toDto).toList();
-        log.info("Total pagos encontrados: {}", pagos.size());
-        return pagos;
+        return repository.findAll().stream().map(this::toDto).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PagoDto findById(Long id) {
         log.info("Buscando pago con id: {}", id);
-        return repository.findById(id).map(p -> {
-            log.info("Pago encontrado para cliente: {}", p.getClienteNombre());
-            return toDto(p);
-        }).orElseGet(() -> {
-            log.warn("Pago no encontrado con id: {}", id);
-            return null;
-        });
+        return repository.findById(id)
+                .map(this::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con ID: " + id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PagoDto> findByReservaId(Long reservaId) {
         log.info("Buscando pagos para reserva: {}", reservaId);
         return repository.findByReservaId(reservaId).stream().map(this::toDto).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PagoDto> findByEstado(String estado) {
         log.info("Buscando pagos con estado: {}", estado);
         return repository.findByEstado(estado).stream().map(this::toDto).toList();
     }
 
     @Override
+    @Transactional
     public PagoDto save(PagoDto dto) {
         log.info("Guardando pago para cliente: {}", dto.getClienteNombre());
         try {
             if (dto.getEstado() == null) dto.setEstado("PENDIENTE");
             if (dto.getFechaPago() == null) dto.setFechaPago(LocalDateTime.now());
-            PagoDto saved = toDto(repository.save(toEntity(dto)));
-            log.info("Pago guardado exitosamente con id: {}", saved.getId());
-            return saved;
+            return toDto(repository.save(toEntity(dto)));
         } catch (Exception e) {
             log.error("Error al guardar pago: {}", e.getMessage());
             throw new RuntimeException("Error al guardar pago: " + e.getMessage());
@@ -78,6 +77,7 @@ public class PagoServiceImpl implements PagoService {
     }
 
     @Override
+    @Transactional
     public PagoDto confirmarPago(Long id) {
         log.info("Confirmando pago con id: {}", id);
         return repository.findById(id).map(pago -> {
@@ -85,21 +85,17 @@ public class PagoServiceImpl implements PagoService {
             pago.setFechaPago(LocalDateTime.now());
             log.info("Pago confirmado para cliente: {}", pago.getClienteNombre());
             return toDto(repository.save(pago));
-        }).orElseGet(() -> {
-            log.warn("Pago no encontrado con id: {}", id);
-            return null;
-        });
+        }).orElseThrow(() -> new ResourceNotFoundException("No se puede confirmar, pago no encontrado con ID: " + id));
     }
 
     @Override
+    @Transactional
     public Boolean deleteById(Long id) {
         log.info("Eliminando pago con id: {}", id);
         if (repository.existsById(id)) {
             repository.deleteById(id);
-            log.info("Pago eliminado exitosamente con id: {}", id);
             return true;
         }
-        log.warn("Pago no encontrado para eliminar con id: {}", id);
-        return false;
+        throw new ResourceNotFoundException("No se encontró pago para eliminar con ID: " + id);
     }
 }
