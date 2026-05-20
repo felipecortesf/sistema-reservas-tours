@@ -4,6 +4,7 @@
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-embarques/src/main/java/com/reservatours/msembarques/controller/EmbarqueController.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-embarques/src/main/java/com/reservatours/msembarques/dto/EmbarqueDto.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-embarques/src/main/java/com/reservatours/msembarques/exception/GlobalExceptionHandler.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-embarques/src/main/java/com/reservatours/msembarques/exception/ResourceNotFoundException.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-embarques/src/main/java/com/reservatours/msembarques/model/Embarque.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-embarques/src/main/java/com/reservatours/msembarques/repository/EmbarqueRepository.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-embarques/src/main/java/com/reservatours/msembarques/service/EmbarqueService.java

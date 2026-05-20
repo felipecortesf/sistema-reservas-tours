@@ -4,10 +4,12 @@ import com.reservatours.msembarques.dto.EmbarqueDto;
 import com.reservatours.msembarques.model.Embarque;
 import com.reservatours.msembarques.repository.EmbarqueRepository;
 import com.reservatours.msembarques.service.EmbarqueService;
+import com.reservatours.msembarques.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -36,43 +38,42 @@ public class EmbarqueServiceImpl implements EmbarqueService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EmbarqueDto> findAll() {
         log.info("Consultando todos los embarques");
         return repository.findAll().stream().map(this::toDto).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EmbarqueDto findById(Long id) {
         log.info("Buscando embarque con id: {}", id);
-        return repository.findById(id).map(e -> {
-            log.info("Embarque encontrado: {}", e.getTourNombre());
-            return toDto(e);
-        }).orElseGet(() -> {
-            log.warn("Embarque no encontrado con id: {}", id);
-            return null;
-        });
+        return repository.findById(id)
+                .map(this::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Embarque no encontrado con ID: " + id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EmbarqueDto> findByFecha(String fecha) {
         log.info("Buscando embarques para fecha: {}", fecha);
         return repository.findByFechaEmbarque(LocalDate.parse(fecha)).stream().map(this::toDto).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EmbarqueDto> findByEstado(String estado) {
         log.info("Buscando embarques con estado: {}", estado);
         return repository.findByEstado(estado).stream().map(this::toDto).toList();
     }
 
     @Override
+    @Transactional
     public EmbarqueDto save(EmbarqueDto dto) {
         log.info("Guardando embarque para tour: {}", dto.getTourNombre());
         if (dto.getEstado() == null) dto.setEstado("PROGRAMADO");
         try {
-            EmbarqueDto saved = toDto(repository.save(toEntity(dto)));
-            log.info("Embarque guardado con id: {}", saved.getId());
-            return saved;
+            return toDto(repository.save(toEntity(dto)));
         } catch (Exception e) {
             log.error("Error al guardar embarque: {}", e.getMessage());
             throw new RuntimeException("Error al guardar embarque: " + e.getMessage());
@@ -80,43 +81,36 @@ public class EmbarqueServiceImpl implements EmbarqueService {
     }
 
     @Override
+    @Transactional
     public EmbarqueDto actualizarEstado(Long id, String estado, String observaciones) {
         log.info("Actualizando estado embarque id: {} a: {}", id, estado);
         return repository.findById(id).map(embarque -> {
             embarque.setEstado(estado);
             embarque.setObservaciones(observaciones);
-            log.info("Estado actualizado exitosamente para embarque id: {}", id);
             return toDto(repository.save(embarque));
-        }).orElseGet(() -> {
-            log.warn("Embarque no encontrado con id: {}", id);
-            return null;
-        });
+        }).orElseThrow(() -> new ResourceNotFoundException("No se pudo actualizar, embarque no encontrado con ID: " + id));
     }
 
     @Override
+    @Transactional
     public EmbarqueDto reportarRetraso(Long id, String horaReal, String observaciones) {
         log.warn("Reportando retraso en embarque id: {}, hora real: {}", id, horaReal);
         return repository.findById(id).map(embarque -> {
             embarque.setHoraEmbarqueReal(LocalTime.parse(horaReal));
             embarque.setEstado("RETRASADO");
             embarque.setObservaciones(observaciones);
-            log.warn("Embarque marcado como RETRASADO. Tour: {}", embarque.getTourNombre());
             return toDto(repository.save(embarque));
-        }).orElseGet(() -> {
-            log.warn("Embarque no encontrado con id: {}", id);
-            return null;
-        });
+        }).orElseThrow(() -> new ResourceNotFoundException("No se pudo reportar retraso, embarque no encontrado con ID: " + id));
     }
 
     @Override
+    @Transactional
     public Boolean deleteById(Long id) {
         log.info("Eliminando embarque con id: {}", id);
         if (repository.existsById(id)) {
             repository.deleteById(id);
-            log.info("Embarque eliminado con id: {}", id);
             return true;
         }
-        log.warn("Embarque no encontrado con id: {}", id);
-        return false;
+        throw new ResourceNotFoundException("No se encontró embarque para eliminar con ID: " + id);
     }
 }
