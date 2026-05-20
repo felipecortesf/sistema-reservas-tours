@@ -21,7 +21,9 @@ public class MensajeController {
 
     @GetMapping("/{id}")
     public ResponseEntity<MensajeDto> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+        MensajeDto dto = service.findById(id);
+        if (dto == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/reserva/{reservaId}")

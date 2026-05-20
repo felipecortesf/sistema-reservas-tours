@@ -21,7 +21,9 @@ public class EmbarqueController {
 
     @GetMapping("/{id}")
     public ResponseEntity<EmbarqueDto> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+        EmbarqueDto dto = service.findById(id);
+        if (dto == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/fecha/{fecha}")
@@ -35,7 +37,7 @@ public class EmbarqueController {
     }
 
     @PostMapping
-    public ResponseEntity<EmbarqueDto> save(@RequestBody EmbarqueDto dto) {
+    public ResponseEntity<EmbarqueDto> save(@Valid @RequestBody EmbarqueDto dto) {
         return ResponseEntity.ok(service.save(dto));
     }
 

@@ -21,7 +21,9 @@ public class ReporteController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ReporteDto> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+        ReporteDto dto = service.findById(id);
+        if (dto == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/fecha/{fecha}")

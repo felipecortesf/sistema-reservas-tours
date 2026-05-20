@@ -23,7 +23,9 @@ public class ReservaController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ReservaDto> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+        ReservaDto dto = service.findById(id);
+        if (dto == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/fecha/{fecha}")

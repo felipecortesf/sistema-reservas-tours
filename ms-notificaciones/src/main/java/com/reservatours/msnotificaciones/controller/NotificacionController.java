@@ -21,7 +21,9 @@ public class NotificacionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<NotificacionDto> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+        NotificacionDto dto = service.findById(id);
+        if (dto == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/telefono/{telefono}")
@@ -35,7 +37,7 @@ public class NotificacionController {
     }
 
     @PostMapping("/enviar")
-    public ResponseEntity<NotificacionDto> enviar(@RequestBody NotificacionDto dto) {
+    public ResponseEntity<NotificacionDto> enviar(@Valid @RequestBody NotificacionDto dto) {
         return ResponseEntity.ok(service.enviarNotificacion(dto));
     }
 

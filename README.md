@@ -147,3 +147,15 @@ Abrir: http://localhost:8761
 - ms-comunicacion-agencia → ms-reservas (OpenFeign)
 - ms-notificaciones → ms-reservas (OpenFeign)
 - ms-embarques → ms-catalogo-tours (OpenFeign)
+
+## ms-pagos
+- Puerto: 8090
+- Base de datos: pagos_db
+- Descripcion: Gestion de pagos de reservas con confirmacion y metodos de pago
+- Comunicacion: ms-pagos -> ms-reservas (OpenFeign)
+
+### Ejecutar ms-pagos
+
+
+
+

@@ -26,11 +26,13 @@ public class TourController {
 
     @GetMapping("/{id}")
     public ResponseEntity<TourDto> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+        TourDto tour = service.findById(id);
+        if (tour == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(tour);
     }
 
     @PostMapping
-    public ResponseEntity<TourDto> save(@RequestBody TourDto dto) {
+    public ResponseEntity<TourDto> save(@Valid @RequestBody TourDto dto) {
         return ResponseEntity.ok(service.save(dto));
     }
 

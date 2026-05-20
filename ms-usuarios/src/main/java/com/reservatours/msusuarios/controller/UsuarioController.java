@@ -22,7 +22,9 @@ public class UsuarioController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioDto> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+        UsuarioDto dto = service.findById(id);
+        if (dto == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/email/{email}")
@@ -31,7 +33,7 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioDto> save(@RequestBody UsuarioDto dto) {
+    public ResponseEntity<UsuarioDto> save(@Valid @RequestBody UsuarioDto dto) {
         return ResponseEntity.ok(service.save(dto));
     }
 

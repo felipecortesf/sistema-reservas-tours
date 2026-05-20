@@ -3,5 +3,5 @@
 **/target/
 .wrangler/
 **/.wrangler/
-**/application.properties
+
 .env
