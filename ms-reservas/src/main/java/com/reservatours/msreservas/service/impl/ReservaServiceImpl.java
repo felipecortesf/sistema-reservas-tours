@@ -4,6 +4,7 @@ import com.reservatours.msreservas.dto.ReservaDto;
 import com.reservatours.msreservas.model.Reserva;
 import com.reservatours.msreservas.repository.ReservaRepository;
 import com.reservatours.msreservas.service.ReservaService;
+import com.reservatours.msreservas.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,35 +49,31 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ReservaDto> findAll() {
         log.info("Consultando todas las reservas");
-        List<ReservaDto> reservas = repository.findAll().stream().map(this::toDto).toList();
-        log.info("Total reservas encontradas: {}", reservas.size());
-        return reservas;
+        return repository.findAll().stream().map(this::toDto).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ReservaDto findById(Long id) {
         log.info("Buscando reserva con id: {}", id);
-        return repository.findById(id).map(r -> {
-            log.info("Reserva encontrada para cliente: {}", r.getClienteNombre());
-            return toDto(r);
-        }).orElseGet(() -> {
-            log.warn("Reserva no encontrada con id: {}", id);
-            return null;
-        });
+        return repository.findById(id)
+                .map(this::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada con ID: " + id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ReservaDto> findByFecha(String fecha) {
         log.info("Buscando reservas para fecha: {}", fecha);
-        List<ReservaDto> reservas = repository.findByFechaTour(LocalDate.parse(fecha))
+        return repository.findByFechaTour(LocalDate.parse(fecha))
                 .stream().map(this::toDto).toList();
-        log.info("Reservas encontradas para {}: {}", fecha, reservas.size());
-        return reservas;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ReservaDto> findByTelefono(String telefono) {
         log.info("Buscando reservas para telefono: {}", telefono);
         return repository.findByClienteTelefono(telefono)
@@ -83,15 +81,14 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
+    @Transactional
     public ReservaDto save(ReservaDto dto) {
         log.info("Guardando reserva para cliente: {}", dto.getClienteNombre());
         try {
             if (dto.getFechaCreacion() == null) dto.setFechaCreacion(LocalDateTime.now());
             if (dto.getEstado() == null) dto.setEstado("CONFIRMADA");
             if (dto.getNotificacionEnviada() == null) dto.setNotificacionEnviada(false);
-            ReservaDto saved = toDto(repository.save(toEntity(dto)));
-            log.info("Reserva guardada exitosamente con id: {}", saved.getId());
-            return saved;
+            return toDto(repository.save(toEntity(dto)));
         } catch (Exception e) {
             log.error("Error al guardar reserva: {}", e.getMessage());
             throw new RuntimeException("Error al guardar reserva: " + e.getMessage());
@@ -99,21 +96,21 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
+    @Transactional
     public Boolean deleteById(Long id) {
         log.info("Eliminando reserva con id: {}", id);
         if (repository.existsById(id)) {
             repository.deleteById(id);
-            log.info("Reserva eliminada exitosamente con id: {}", id);
             return true;
         }
-        log.warn("No se encontro reserva para eliminar con id: {}", id);
-        return false;
+        throw new ResourceNotFoundException("No se encontró reserva para eliminar con ID: " + id);
     }
 
     @Scheduled(cron = "0 0 16 * * *")
     @Override
+    @Transactional
     public void enviarNotificacionesDiaSiguiente() {
-        log.info("Iniciando envio de notificaciones para manana");
+        log.info("Iniciando envio de notificaciones para mañana");
         LocalDate manana = LocalDate.now().plusDays(1);
         List<Reserva> reservas = repository.findByFechaTourAndNotificacionEnviada(manana, false);
         log.info("Reservas a notificar: {}", reservas.size());
@@ -121,7 +118,6 @@ public class ReservaServiceImpl implements ReservaService {
             enviarMensajeWhatsApp(reserva);
             reserva.setNotificacionEnviada(true);
             repository.save(reserva);
-            log.info("Notificacion enviada a: {}", reserva.getClienteTelefono());
         }
     }
 

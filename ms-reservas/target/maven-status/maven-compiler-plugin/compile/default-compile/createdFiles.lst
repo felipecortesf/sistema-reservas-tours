@@ -1,8 +1,9 @@
 com/reservatours/msreservas/service/ReservaService.class
 com/reservatours/msreservas/dto/ReservaDto.class
+com/reservatours/msreservas/repository/ReservaRepository.class
+com/reservatours/msreservas/exception/ResourceNotFoundException.class
 com/reservatours/msreservas/MsReservasApplication.class
 com/reservatours/msreservas/service/impl/ReservaServiceImpl.class
-com/reservatours/msreservas/repository/ReservaRepository.class
 com/reservatours/msreservas/config/SwaggerConfig.class
 com/reservatours/msreservas/controller/ReservaController.class
 com/reservatours/msreservas/model/Reserva.class
