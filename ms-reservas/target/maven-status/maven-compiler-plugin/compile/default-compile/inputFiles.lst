@@ -1,5 +1,6 @@
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-reservas/src/main/java/com/reservatours/msreservas/MsReservasApplication.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-reservas/src/main/java/com/reservatours/msreservas/client/CatalogoClient.java
+/Users/felipecortes/Documents/sistema-reservas-tours/ms-reservas/src/main/java/com/reservatours/msreservas/client/WhatsappClient.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-reservas/src/main/java/com/reservatours/msreservas/config/SwaggerConfig.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-reservas/src/main/java/com/reservatours/msreservas/controller/ReservaController.java
 /Users/felipecortes/Documents/sistema-reservas-tours/ms-reservas/src/main/java/com/reservatours/msreservas/dto/ReservaDto.java

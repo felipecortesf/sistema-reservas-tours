@@ -9,3 +9,4 @@ com/reservatours/msreservas/controller/ReservaController.class
 com/reservatours/msreservas/model/Reserva.class
 com/reservatours/msreservas/exception/GlobalExceptionHandler.class
 com/reservatours/msreservas/client/CatalogoClient.class
+com/reservatours/msreservas/client/WhatsappClient.class
