@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.Map;
 
-@FeignClient(name = "ms-whatsapp", url = "http://localhost:8088")
+@FeignClient(name = "ms-whatsapp")
 public interface WhatsappClient {
 
     @PostMapping("/api/v1/whatsapp/enviar")
