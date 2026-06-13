@@ -299,3 +299,31 @@ Esto crea con un solo comando toda la infraestructura de datos necesaria. Los mi
 ```bash
 docker compose down
 ```
+
+## Despliegue completo con Docker Compose
+
+El sistema completo (12 microservicios + MySQL + Kafka) se levanta con un solo comando.
+
+### Requisitos
+- Docker Desktop corriendo
+
+### Levantar todo el sistema
+```bash
+docker compose up -d --build
+```
+
+Esto construye las 12 imagenes (multi-stage: Maven build + JRE runtime) y levanta 14 contenedores:
+- 10 microservicios de negocio + Eureka + Gateway
+- MySQL 8.4 con las 10 bases de datos
+- Kafka 4.0 (KRaft)
+
+Todos los microservicios se registran automaticamente en Eureka y son accesibles via el Gateway en `http://localhost:8080`.
+
+### Apagar el sistema
+```bash
+docker compose down
+```
+
+### Notas
+- Variables de entorno (`SPRING_DATASOURCE_URL`, `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE`, `SPRING_KAFKA_BOOTSTRAP_SERVERS`) se sobreescriben automaticamente para apuntar a los contenedores via la red interna de Docker (`mysql`, `kafka`, `ms-eureka`)
+- Cada microservicio tiene su propio `Dockerfile` (multi-stage: `maven:3.9-eclipse-temurin-25` para build, `eclipse-temurin:25-jre` para runtime)
