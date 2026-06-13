@@ -135,4 +135,18 @@ public class ReservaServiceImpl implements ReservaService {
             log.error("Error en la comunicacion remota con ms-whatsapp para {}: {}", reserva.getClienteTelefono(), e.getMessage());
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long contarConfirmadasPorTour(Long tourId) {
+        log.info("Contando reservas confirmadas para tour: {}", tourId);
+        return repository.contarConfirmadasPorTour(tourId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservaDto> findReservasProximas(int dias) {
+        log.info("Buscando reservas proximas en {} dias", dias);
+        return repository.findReservasProximas(dias).stream().map(this::toDto).toList();
+    }
 }

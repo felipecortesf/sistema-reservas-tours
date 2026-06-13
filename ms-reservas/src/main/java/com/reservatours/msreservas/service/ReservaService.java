@@ -11,4 +11,6 @@ public interface ReservaService {
     ReservaDto save(ReservaDto dto);
     Boolean deleteById(Long id);
     void enviarNotificacionesDiaSiguiente();
+    Long contarConfirmadasPorTour(Long tourId);
+    List<ReservaDto> findReservasProximas(int dias);
 }
