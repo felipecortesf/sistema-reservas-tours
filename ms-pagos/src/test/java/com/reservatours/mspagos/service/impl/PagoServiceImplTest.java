@@ -26,6 +26,9 @@ class PagoServiceImplTest {
     @Mock
     private PagoRepository repository;
 
+    @Mock
+    private com.reservatours.mspagos.kafka.PagoEventProducer eventProducer;
+
     @InjectMocks
     private PagoServiceImpl service;
 

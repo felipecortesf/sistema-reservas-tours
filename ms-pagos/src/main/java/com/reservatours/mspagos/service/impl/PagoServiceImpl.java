@@ -19,6 +19,7 @@ public class PagoServiceImpl implements PagoService {
 
     private static final Logger log = LoggerFactory.getLogger(PagoServiceImpl.class);
     private final PagoRepository repository;
+    private final com.reservatours.mspagos.kafka.PagoEventProducer eventProducer;
 
     private PagoDto toDto(Pago p) {
         return new PagoDto(p.getId(), p.getReservaId(), p.getClienteNombre(),
@@ -84,10 +85,11 @@ public class PagoServiceImpl implements PagoService {
             pago.setEstado("PAGADO");
             pago.setFechaPago(LocalDateTime.now());
             log.info("Pago confirmado para cliente: {}", pago.getClienteNombre());
-            return toDto(repository.save(pago));
+            PagoDto saved = toDto(repository.save(pago));
+            eventProducer.publicarPagoConfirmado(saved);
+            return saved;
         }).orElseThrow(() -> new ResourceNotFoundException("No se puede confirmar, pago no encontrado con ID: " + id));
     }
-
     @Override
     @Transactional
     public Boolean deleteById(Long id) {
