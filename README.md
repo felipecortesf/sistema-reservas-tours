@@ -172,3 +172,111 @@ Abrir: http://localhost:8761
 ### WhatsApp
 - POST /api/v1/whatsapp/enviar
 - GET /api/v1/whatsapp
+
+## Seguridad — Spring Security + JWT + BCrypt
+
+Sistema de autenticación centralizado en ms-usuarios, replicado mediante JWT compartido en ms-reservas y ms-pagos.
+
+### Autenticación
+- **BCrypt**: passwords encriptados antes de guardar en BD
+- **JWT (JJWT 0.11.5)**: tokens firmados con HMAC-SHA256, expiración 10 horas
+- **Endpoint de login**: `POST /api/v1/auth/login` (ms-usuarios) retorna `token`, `email` y `rol`
+
+### Control de Acceso Basado en Roles (RBAC)
+
+| Microservicio | Endpoint | Regla |
+|---|---|---|
+| ms-usuarios | `/api/v1/usuarios/**` | Solo `ADMIN` |
+| ms-usuarios | `/api/v1/auth/**` | Público |
+| ms-reservas | `GET /api/v1/reservas/**` | Cualquier autenticado |
+| ms-reservas | `POST/PUT /api/v1/reservas/**` | `ADMIN`, `AGENTE` |
+| ms-reservas | `DELETE /api/v1/reservas/**` | Solo `ADMIN` |
+| ms-pagos | `GET /api/v1/pagos/**` | Cualquier autenticado |
+| ms-pagos | `POST/PUT /api/v1/pagos/**` | `ADMIN`, `AGENTE` |
+| ms-pagos | `DELETE /api/v1/pagos/**` | Solo `ADMIN` |
+
+### Uso
+
+```bash
+# 1. Login
+curl -X POST http://localhost:8081/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@reservatours.com","password":"admin123"}'
+
+# 2. Usar el token en peticiones protegidas
+curl http://localhost:8083/api/v1/reservas \
+  -H "Authorization: Bearer <token>"
+```
+
+## Comunicación Asíncrona — Apache Kafka
+
+Comunicación basada en eventos entre ms-reservas y ms-notificaciones, complementando OpenFeign para desacoplamiento y consistencia eventual.
+
+### Flujo
+Al crear una reserva (`POST /api/v1/reservas`), ms-reservas publica un evento con los datos de la reserva. ms-notificaciones lo consume automáticamente y crea un registro de notificación pendiente con el mensaje de confirmación para el cliente.
+
+### Configuración
+- **Broker**: Kafka 4.3.0 (modo KRaft, sin Zookeeper) — `localhost:9092`
+- **Topic**: `reserva.creada`
+- **Serialización**: JSON (Spring Kafka JsonSerializer/JsonDeserializer)
+
+### Levantar Kafka
+```bash
+/opt/homebrew/opt/kafka/bin/kafka-server-start /opt/homebrew/etc/kafka/server.properties
+```
+
+## Service Discovery y API Gateway
+
+- **ms-eureka** (8761): todos los microservicios se registran automáticamente vía `@EnableDiscoveryClient`
+- **ms-gateway** (8080): punto de entrada único, enruta a los 10 microservicios de negocio usando Service Discovery (`lb://nombre-servicio`)
+- Los FeignClients usan descubrimiento por nombre (sin URLs hardcodeadas), excepto donde Eureka no está disponible
+
+### Ejemplo
+```bash
+# A través del Gateway (puerto único 8080)
+curl http://localhost:8080/api/v1/reservas
+curl http://localhost:8080/api/v1/tours
+curl http://localhost:8080/api/v1/pagos
+```
+
+## Pruebas Unitarias — JUnit 5 + Mockito
+
+Tests unitarios de la capa de servicio con mocks de repositorios, cubriendo casos exitosos, casos de error (ResourceNotFoundException) y reglas de negocio.
+
+| Microservicio | Tests | Casos destacados |
+|---|---|---|
+| ms-reservas | 7 | save() asigna estado CONFIRMADA por defecto, findById lanza excepción si no existe |
+| ms-catalogo-tours | 7 | reducirCupo() con y sin stock disponible |
+| ms-pagos | 7 | confirmarPago() cambia estado PENDIENTE → PAGADO |
+
+### Ejecutar tests
+```bash
+cd ms-reservas && ./mvnw test
+cd ms-catalogo-tours && ./mvnw test
+cd ms-pagos && ./mvnw test
+```
+
+## Despliegue
+
+El sistema corre localmente y se expone a internet mediante Ngrok, apuntando al API Gateway. Esto permite acceso real a los 10 microservicios de negocio a través de una sola URL pública.
+
+```bash
+ngrok http 8080
+```
+
+La URL generada (ej: `https://xxxx.ngrok-free.dev`) sirve como punto de acceso único:
+```bash
+curl https://xxxx.ngrok-free.dev/api/v1/tours
+curl https://xxxx.ngrok-free.dev/api/v1/reservas -H "Authorization: Bearer <token>"
+```
+
+## Stack Tecnológico Completo
+
+- Java 25, Spring Boot 3.5.14
+- Spring Cloud: Eureka, Gateway, OpenFeign
+- Spring Security + JJWT 0.11.5 + BCrypt
+- Apache Kafka 4.3.0 (KRaft mode)
+- MySQL 8.4 + Flyway
+- JUnit 5 + Mockito
+- SpringDoc OpenAPI (Swagger)
+- Ngrok (exposición pública)
