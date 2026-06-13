@@ -10,4 +10,6 @@ public interface TourService {
     TourDto save(TourDto dto);
     Boolean deleteById(Long id);
     TourDto reducirCupo(Long id);
+    List<TourDto> findToursOrdenadosPorPrecio();
+    java.math.BigDecimal precioPromedioPorDestino(String destino);
 }

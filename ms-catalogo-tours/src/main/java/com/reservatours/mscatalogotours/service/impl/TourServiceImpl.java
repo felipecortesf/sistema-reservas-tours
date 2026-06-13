@@ -98,4 +98,16 @@ public class TourServiceImpl implements TourService {
             return null;
         });
     }
+
+    @Override
+    public List<TourDto> findToursOrdenadosPorPrecio() {
+        log.info("Consultando tours activos ordenados por precio");
+        return repository.findToursActivosOrdenadosPorPrecio().stream().map(this::toDto).toList();
+    }
+
+    @Override
+    public java.math.BigDecimal precioPromedioPorDestino(String destino) {
+        log.info("Calculando precio promedio para destino: {}", destino);
+        return repository.precioPromedioPorDestino(destino);
+    }
 }
