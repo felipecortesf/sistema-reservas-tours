@@ -26,6 +26,7 @@ public class SecurityConfig {
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
+                .requestMatchers("/api/v1/whatsapp/webhook").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/whatsapp/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/whatsapp/**").hasAnyAuthority("ADMIN", "AGENTE")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/whatsapp/**").hasAnyAuthority("ADMIN", "AGENTE")
