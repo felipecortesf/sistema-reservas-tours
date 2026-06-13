@@ -8,3 +8,5 @@
 */target/
 *.log
 entrega-proyecto-tours/
+target/
+**/target/
