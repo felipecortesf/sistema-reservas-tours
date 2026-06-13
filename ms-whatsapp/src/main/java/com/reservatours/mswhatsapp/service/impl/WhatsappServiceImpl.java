@@ -7,11 +7,14 @@ import com.reservatours.mswhatsapp.service.WhatsappService;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,11 +40,24 @@ public class WhatsappServiceImpl implements WhatsappService {
     @Value("${whatsapp.verify.token}")
     private String verifyToken;
 
+    // Fix 2: inicializar Twilio una sola vez al arrancar
+    @PostConstruct
+    public void init() {
+        Twilio.init(accountSid, authToken);
+        log.info("Twilio inicializado correctamente con numero: {}", fromNumber);
+    }
+
     private MensajeWhatsappDto toDto(MensajeWhatsapp m) {
         return new MensajeWhatsappDto(m.getId(), m.getTelefonoRemitente(),
                 m.getTelefonoDestinatario(), m.getNombreRemitente(),
                 m.getContenido(), m.getTipoMensaje(), m.getDireccion(),
                 m.getEstado(), m.getProcesado(), m.getFechaMensaje());
+    }
+
+    // Fix 1: normalizar numero para evitar whatsapp:++56...
+    private String normalizarTelefono(String telefono) {
+        String numero = telefono.startsWith("+") ? telefono : "+" + telefono;
+        return "whatsapp:" + numero;
     }
 
     @Override
@@ -68,11 +84,11 @@ public class WhatsappServiceImpl implements WhatsappService {
     @Override
     public MensajeWhatsappDto enviarMensaje(String telefono, String mensaje) {
         log.info("Enviando mensaje WhatsApp via Twilio a: {}", telefono);
+        String destinatario = normalizarTelefono(telefono);
         String estado = "ENVIADO";
         try {
-            Twilio.init(accountSid, authToken);
             Message message = Message.creator(
-                new PhoneNumber("whatsapp:+" + telefono),
+                new PhoneNumber(destinatario),
                 new PhoneNumber(fromNumber),
                 mensaje
             ).create();
@@ -81,7 +97,7 @@ public class WhatsappServiceImpl implements WhatsappService {
             estado = "ERROR";
             log.error("Error enviando mensaje a {}: {}", telefono, e.getMessage());
         }
-        MensajeWhatsapp m = new MensajeWhatsapp(null, fromNumber, "whatsapp:+" + telefono,
+        MensajeWhatsapp m = new MensajeWhatsapp(null, fromNumber, destinatario,
                 "Sistema", mensaje, "TEXTO", "SALIENTE",
                 estado, true, LocalDateTime.now());
         return toDto(repository.save(m));
@@ -111,9 +127,30 @@ public class WhatsappServiceImpl implements WhatsappService {
         return "Error de verificacion";
     }
 
+    // Fix 3: parsear body de Twilio (application/x-www-form-urlencoded)
     @Override
     public String procesarWebhook(String body) {
         log.info("Webhook recibido, procesando mensaje");
+        try {
+            String[] params = body.split("&");
+            String desde = "";
+            String contenido = "";
+            for (String p : params) {
+                if (p.startsWith("From=")) {
+                    desde = URLDecoder.decode(p.substring(5), StandardCharsets.UTF_8);
+                }
+                if (p.startsWith("Body=")) {
+                    contenido = URLDecoder.decode(p.substring(5), StandardCharsets.UTF_8);
+                }
+            }
+            if (!desde.isEmpty() && !contenido.isEmpty()) {
+                String telefono = desde.replace("whatsapp:", "");
+                recibirMensaje(telefono, "Cliente WhatsApp", contenido);
+                log.info("Webhook procesado: mensaje de {}", desde);
+            }
+        } catch (Exception e) {
+            log.error("Error procesando webhook: {}", e.getMessage());
+        }
         return "OK";
     }
 }
