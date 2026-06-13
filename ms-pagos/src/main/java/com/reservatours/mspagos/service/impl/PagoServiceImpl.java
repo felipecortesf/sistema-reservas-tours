@@ -98,4 +98,18 @@ public class PagoServiceImpl implements PagoService {
         }
         throw new ResourceNotFoundException("No se encontró pago para eliminar con ID: " + id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.math.BigDecimal sumarMontoPorEstado(String estado) {
+        log.info("Sumando montos con estado: {}", estado);
+        return repository.sumarMontoPorEstado(estado);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<java.util.Map<String, Object>> topClientesPorMontoPagado(int limite) {
+        log.info("Consultando top {} clientes por monto pagado", limite);
+        return repository.topClientesPorMontoPagado(limite);
+    }
 }

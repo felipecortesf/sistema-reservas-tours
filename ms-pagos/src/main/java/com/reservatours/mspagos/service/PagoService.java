@@ -11,4 +11,6 @@ public interface PagoService {
     PagoDto save(PagoDto dto);
     PagoDto confirmarPago(Long id);
     Boolean deleteById(Long id);
+    java.math.BigDecimal sumarMontoPorEstado(String estado);
+    List<java.util.Map<String, Object>> topClientesPorMontoPagado(int limite);
 }
