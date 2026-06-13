@@ -280,3 +280,22 @@ curl https://xxxx.ngrok-free.dev/api/v1/reservas -H "Authorization: Bearer <toke
 - JUnit 5 + Mockito
 - SpringDoc OpenAPI (Swagger)
 - Ngrok (exposición pública)
+
+## Docker / Docker Compose
+
+Infraestructura de base de datos y mensajería containerizada para entornos limpios o CI.
+
+### Servicios incluidos
+- **MySQL 8.4** (puerto 3307): crea automaticamente las 10 bases de datos del sistema via script de inicializacion
+- **Kafka 4.0** (puerto 9094, modo KRaft): broker de mensajeria sin Zookeeper
+
+### Uso
+```bash
+docker compose up -d
+```
+
+Esto crea con un solo comando toda la infraestructura de datos necesaria. Los microservicios Spring Boot corren localmente (`./mvnw spring-boot:run`) y se conectan a estos contenedores ajustando `SPRING_DATASOURCE_URL` al puerto 3307 y `spring.kafka.bootstrap-servers` al puerto 9094 si se usa esta opcion en vez de las instalaciones locales.
+
+```bash
+docker compose down
+```
