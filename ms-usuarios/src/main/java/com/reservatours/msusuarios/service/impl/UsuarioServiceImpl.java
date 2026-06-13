@@ -18,6 +18,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     private static final Logger log = LoggerFactory.getLogger(UsuarioServiceImpl.class);
     private final UsuarioRepository repository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     private UsuarioDto toDto(Usuario u) {
         return new UsuarioDto(u.getId(), u.getNombre(), u.getApellido(),
@@ -58,6 +59,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Transactional
     public UsuarioDto save(UsuarioDto dto) {
         log.info("Guardando usuario: {}", dto.getEmail());
+            dto.setPassword(passwordEncoder.encode(dto.getPassword()));
         try {
             return toDto(repository.save(toEntity(dto)));
         } catch (Exception e) {
