@@ -10,3 +10,6 @@
 entrega-proyecto-tours/
 target/
 **/target/
+node_modules/
+crearTablero.js
+package*.json
