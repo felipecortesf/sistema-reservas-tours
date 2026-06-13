@@ -24,6 +24,7 @@ public class ReservaServiceImpl implements ReservaService {
 
     private static final Logger log = LoggerFactory.getLogger(ReservaServiceImpl.class);
     private final ReservaRepository repository;
+    private final com.reservatours.msreservas.kafka.ReservaEventProducer eventProducer;
     private final WhatsappClient whatsappClient;
 
     private ReservaDto toDto(Reserva r) {
@@ -82,7 +83,9 @@ public class ReservaServiceImpl implements ReservaService {
             if (dto.getFechaCreacion() == null) dto.setFechaCreacion(LocalDateTime.now());
             if (dto.getEstado() == null) dto.setEstado("CONFIRMADA");
             if (dto.getNotificacionEnviada() == null) dto.setNotificacionEnviada(false);
-            return toDto(repository.save(toEntity(dto)));
+            ReservaDto saved = toDto(repository.save(toEntity(dto)));
+            eventProducer.publicarReservaCreada(saved);
+            return saved;
         } catch (Exception e) {
             log.error("Error al guardar reserva: {}", e.getMessage());
             throw new RuntimeException("Error al guardar reserva: " + e.getMessage());
