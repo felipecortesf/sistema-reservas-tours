@@ -35,6 +35,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(TourNoDisponibleException.class)
+    public ResponseEntity<Map<String, String>> handleTourNoDisponible(TourNoDisponibleException ex) {
+        log.warn("Tour no disponible: {}", ex.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
         log.error("Error de runtime en reservas: {}", ex.getMessage());

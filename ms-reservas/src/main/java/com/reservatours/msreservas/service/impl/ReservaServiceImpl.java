@@ -5,7 +5,10 @@ import com.reservatours.msreservas.model.Reserva;
 import com.reservatours.msreservas.repository.ReservaRepository;
 import com.reservatours.msreservas.service.ReservaService;
 import com.reservatours.msreservas.exception.ResourceNotFoundException;
+import com.reservatours.msreservas.exception.TourNoDisponibleException;
+import com.reservatours.msreservas.client.CatalogoClient;
 import com.reservatours.msreservas.client.WhatsappClient;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +29,7 @@ public class ReservaServiceImpl implements ReservaService {
     private final ReservaRepository repository;
     private final com.reservatours.msreservas.kafka.ReservaEventProducer eventProducer;
     private final WhatsappClient whatsappClient;
+    private final CatalogoClient catalogoClient;
 
     private ReservaDto toDto(Reserva r) {
         return new ReservaDto(r.getId(), r.getClienteNombre(), r.getClienteTelefono(),
@@ -79,6 +83,7 @@ public class ReservaServiceImpl implements ReservaService {
     @Transactional
     public ReservaDto save(ReservaDto dto) {
         log.info("Guardando reserva para cliente: {}", dto.getClienteNombre());
+        reducirCupoDelTour(dto.getTourId());
         try {
             if (dto.getFechaCreacion() == null) dto.setFechaCreacion(LocalDateTime.now());
             if (dto.getEstado() == null) dto.setEstado("CONFIRMADA");
@@ -89,6 +94,26 @@ public class ReservaServiceImpl implements ReservaService {
         } catch (Exception e) {
             log.error("Error al guardar reserva: {}", e.getMessage());
             throw new RuntimeException("Error al guardar reserva: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Valida disponibilidad y descuenta 1 cupo en ms-catalogo-tours (via Feign) antes de
+     * confirmar la reserva. Si el tour no tiene cupos o no existe, la reserva NO se crea.
+     */
+    private void reducirCupoDelTour(Long tourId) {
+        try {
+            log.info("Validando y reduciendo cupo en ms-catalogo-tours para tour id: {}", tourId);
+            catalogoClient.reducirCupo(tourId);
+        } catch (FeignException.Conflict e) {
+            log.warn("Cupos agotados para el tour id: {}", tourId);
+            throw new TourNoDisponibleException("No hay cupos disponibles para el tour seleccionado (ID: " + tourId + ")");
+        } catch (FeignException.NotFound e) {
+            log.warn("Tour no encontrado en ms-catalogo-tours, id: {}", tourId);
+            throw new ResourceNotFoundException("El tour indicado no existe (ID: " + tourId + ")");
+        } catch (FeignException e) {
+            log.error("Error de comunicacion remota con ms-catalogo-tours: {}", e.getMessage());
+            throw new RuntimeException("No se pudo validar la disponibilidad del tour: " + e.getMessage());
         }
     }
 
