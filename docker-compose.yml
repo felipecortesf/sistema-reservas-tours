@@ -109,6 +109,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: root123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://ms-eureka:8761/eureka/
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
 
   ms-embarques:
     build: ./ms-embarques
@@ -141,6 +143,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/agencia_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_PASSWORD: root123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://ms-eureka:8761/eureka/
+      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
 
   ms-reportes:
     build: ./ms-reportes
@@ -157,6 +161,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/reportes_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_PASSWORD: root123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://ms-eureka:8761/eureka/
+      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
 
   ms-whatsapp:
     build: ./ms-whatsapp
@@ -173,6 +179,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/whatsapp_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_PASSWORD: root123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://ms-eureka:8761/eureka/
+      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM}
 
   ms-notificaciones-push:
     build: ./ms-notificaciones-push
