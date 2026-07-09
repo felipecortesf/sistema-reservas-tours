@@ -1,9 +1,15 @@
 package com.reservatours.mspagos.service.impl;
 
+import com.reservatours.mspagos.client.ReservaClient;
 import com.reservatours.mspagos.dto.PagoDto;
+import com.reservatours.mspagos.exception.PagoYaConfirmadoException;
 import com.reservatours.mspagos.exception.ResourceNotFoundException;
 import com.reservatours.mspagos.model.Pago;
 import com.reservatours.mspagos.repository.PagoRepository;
+import feign.FeignException;
+import feign.Request;
+import feign.RequestTemplate;
+import feign.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,8 +18,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,10 +37,25 @@ class PagoServiceImplTest {
     @Mock
     private com.reservatours.mspagos.kafka.PagoEventProducer eventProducer;
 
+    @Mock
+    private ReservaClient reservaClient;
+
     @InjectMocks
     private PagoServiceImpl service;
 
     private Pago pago;
+
+    private FeignException feignErrorWithStatus(int status, String path) {
+        Request request = Request.create(Request.HttpMethod.GET, path,
+                Map.of(), null, StandardCharsets.UTF_8, new RequestTemplate());
+        Response response = Response.builder()
+                .status(status)
+                .reason("error")
+                .request(request)
+                .headers(Map.of())
+                .build();
+        return FeignException.errorStatus("ReservaClient#getReservaById(Long)", response);
+    }
 
     @BeforeEach
     void setUp() {
@@ -66,6 +89,7 @@ class PagoServiceImplTest {
         PagoDto resultado = service.confirmarPago(1L);
 
         assertEquals("PAGADO", resultado.getEstado());
+        verify(reservaClient, times(1)).getReservaById(1L);
         verify(repository, times(1)).save(any(Pago.class));
     }
 
@@ -74,6 +98,24 @@ class PagoServiceImplTest {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.confirmarPago(99L));
+        verify(repository, never()).save(any(Pago.class));
+    }
+
+    @Test
+    void confirmarPago_yaConfirmado_lanzaPagoYaConfirmadoException() {
+        pago.setEstado("PAGADO");
+        when(repository.findById(1L)).thenReturn(Optional.of(pago));
+
+        assertThrows(PagoYaConfirmadoException.class, () -> service.confirmarPago(1L));
+        verify(repository, never()).save(any(Pago.class));
+    }
+
+    @Test
+    void confirmarPago_reservaAsociadaInexistente_lanzaResourceNotFoundException() {
+        when(repository.findById(1L)).thenReturn(Optional.of(pago));
+        when(reservaClient.getReservaById(1L)).thenThrow(feignErrorWithStatus(404, "/api/v1/reservas/1"));
+
+        assertThrows(ResourceNotFoundException.class, () -> service.confirmarPago(1L));
         verify(repository, never()).save(any(Pago.class));
     }
 
