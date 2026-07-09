@@ -1,6 +1,8 @@
 package com.reservatours.mscatalogotours.service.impl;
 
 import com.reservatours.mscatalogotours.dto.TourDto;
+import com.reservatours.mscatalogotours.exception.CuposAgotadosException;
+import com.reservatours.mscatalogotours.exception.ResourceNotFoundException;
 import com.reservatours.mscatalogotours.model.Tour;
 import com.reservatours.mscatalogotours.repository.TourRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,13 +82,19 @@ class TourServiceImplTest {
     }
 
     @Test
-    void reducirCupo_sinCuposDisponibles_retornaNullYNoGuarda() {
+    void reducirCupo_sinCuposDisponibles_lanzaCuposAgotadosException() {
         tour.setCuposDisponibles(0);
         when(repository.findById(1L)).thenReturn(Optional.of(tour));
 
-        TourDto resultado = service.reducirCupo(1L);
+        assertThrows(CuposAgotadosException.class, () -> service.reducirCupo(1L));
+        verify(repository, never()).save(any(Tour.class));
+    }
 
-        assertNull(resultado);
+    @Test
+    void reducirCupo_tourInexistente_lanzaResourceNotFoundException() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.reducirCupo(99L));
         verify(repository, never()).save(any(Tour.class));
     }
 
