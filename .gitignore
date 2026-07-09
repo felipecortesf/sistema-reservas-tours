@@ -1,15 +1,30 @@
+# Maven
+target/
+*/target/
+.mvn/wrapper/maven-wrapper.jar
 
-# Archivos sensibles
-**/
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Variables de entorno y secretos - NUNCA subir a git
+.env
+.env.local
+*.env
+!.env.example
+
+# Docker
 .wrangler/
 **/.wrangler/
-
-.env
-*/
-*.log
-entrega-proyecto-tours/
-
-**/
-node_modules/
-crearTablero.js
-package*.json
