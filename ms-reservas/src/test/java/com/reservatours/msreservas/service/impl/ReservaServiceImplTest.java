@@ -1,11 +1,17 @@
 package com.reservatours.msreservas.service.impl;
 
+import com.reservatours.msreservas.client.CatalogoClient;
 import com.reservatours.msreservas.client.WhatsappClient;
 import com.reservatours.msreservas.dto.ReservaDto;
 import com.reservatours.msreservas.exception.ResourceNotFoundException;
+import com.reservatours.msreservas.exception.TourNoDisponibleException;
 import com.reservatours.msreservas.kafka.ReservaEventProducer;
 import com.reservatours.msreservas.model.Reserva;
 import com.reservatours.msreservas.repository.ReservaRepository;
+import feign.FeignException;
+import feign.Request;
+import feign.RequestTemplate;
+import feign.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,10 +19,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,8 +43,23 @@ class ReservaServiceImplTest {
     @Mock
     private WhatsappClient whatsappClient;
 
+    @Mock
+    private CatalogoClient catalogoClient;
+
     @InjectMocks
     private ReservaServiceImpl service;
+
+    private FeignException feignErrorWithStatus(int status, String path) {
+        Request request = Request.create(Request.HttpMethod.PUT, path,
+                Map.of(), null, StandardCharsets.UTF_8, new RequestTemplate());
+        Response response = Response.builder()
+                .status(status)
+                .reason("error")
+                .request(request)
+                .headers(Map.of())
+                .build();
+        return FeignException.errorStatus("CatalogoClient#reducirCupo(Long)", response);
+    }
 
     private Reserva reserva;
     private ReservaDto reservaDto;
@@ -83,7 +106,34 @@ class ReservaServiceImplTest {
 
         assertNotNull(resultado);
         assertEquals("CONFIRMADA", resultado.getEstado());
+        verify(catalogoClient, times(1)).reducirCupo(2L);
         verify(eventProducer, times(1)).publicarReservaCreada(any(ReservaDto.class));
+    }
+
+    @Test
+    void save_tourSinCupos_lanzaTourNoDisponibleExceptionYNoGuarda() {
+        ReservaDto nuevaReserva = new ReservaDto(null, "Maria Garcia", "56987654321",
+                "maria@email.com", 2L, "Pao de Acucar", LocalDate.of(2026, 9, 1),
+                LocalTime.of(8, 0), "Hotel Ipanema", "Guia Ana", null, null, null);
+
+        when(catalogoClient.reducirCupo(2L)).thenThrow(feignErrorWithStatus(409, "/api/v1/tours/2/reducir-cupo"));
+
+        assertThrows(TourNoDisponibleException.class, () -> service.save(nuevaReserva));
+        verify(repository, never()).save(any(Reserva.class));
+        verify(eventProducer, never()).publicarReservaCreada(any(ReservaDto.class));
+    }
+
+    @Test
+    void save_tourInexistente_lanzaResourceNotFoundExceptionYNoGuarda() {
+        ReservaDto nuevaReserva = new ReservaDto(null, "Maria Garcia", "56987654321",
+                "maria@email.com", 999L, "Tour Inexistente", LocalDate.of(2026, 9, 1),
+                LocalTime.of(8, 0), "Hotel Ipanema", "Guia Ana", null, null, null);
+
+        when(catalogoClient.reducirCupo(999L)).thenThrow(feignErrorWithStatus(404, "/api/v1/tours/999/reducir-cupo"));
+
+        assertThrows(ResourceNotFoundException.class, () -> service.save(nuevaReserva));
+        verify(repository, never()).save(any(Reserva.class));
+        verify(eventProducer, never()).publicarReservaCreada(any(ReservaDto.class));
     }
 
     @Test
