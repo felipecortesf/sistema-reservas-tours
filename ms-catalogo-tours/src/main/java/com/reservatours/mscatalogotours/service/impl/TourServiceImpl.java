@@ -1,6 +1,8 @@
 package com.reservatours.mscatalogotours.service.impl;
 
 import com.reservatours.mscatalogotours.dto.TourDto;
+import com.reservatours.mscatalogotours.exception.CuposAgotadosException;
+import com.reservatours.mscatalogotours.exception.ResourceNotFoundException;
 import com.reservatours.mscatalogotours.model.Tour;
 import com.reservatours.mscatalogotours.repository.TourRepository;
 import com.reservatours.mscatalogotours.service.TourService;
@@ -85,18 +87,18 @@ public class TourServiceImpl implements TourService {
     @Override
     public TourDto reducirCupo(Long id) {
         log.info("Reduciendo cupo del tour con id: {}", id);
-        return repository.findById(id).map(tour -> {
-            if (tour.getCuposDisponibles() > 0) {
-                tour.setCuposDisponibles(tour.getCuposDisponibles() - 1);
-                log.info("Cupo reducido. Cupos restantes: {}", tour.getCuposDisponibles());
-                return toDto(repository.save(tour));
-            }
+        Tour tour = repository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Tour no encontrado con id: {}", id);
+                    return new ResourceNotFoundException("Tour no encontrado con ID: " + id);
+                });
+        if (tour.getCuposDisponibles() <= 0) {
             log.warn("No hay cupos disponibles para tour id: {}", id);
-            return null;
-        }).orElseGet(() -> {
-            log.warn("Tour no encontrado con id: {}", id);
-            return null;
-        });
+            throw new CuposAgotadosException("No hay cupos disponibles para el tour con ID: " + id);
+        }
+        tour.setCuposDisponibles(tour.getCuposDisponibles() - 1);
+        log.info("Cupo reducido. Cupos restantes: {}", tour.getCuposDisponibles());
+        return toDto(repository.save(tour));
     }
 
     @Override
