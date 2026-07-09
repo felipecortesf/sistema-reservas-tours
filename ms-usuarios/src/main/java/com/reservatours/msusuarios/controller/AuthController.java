@@ -3,6 +3,8 @@ package com.reservatours.msusuarios.controller;
 import com.reservatours.msusuarios.config.JwtUtil;
 import com.reservatours.msusuarios.model.Usuario;
 import com.reservatours.msusuarios.repository.UsuarioRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Autenticacion", description = "Login y generacion de tokens JWT")
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -30,6 +33,7 @@ public class AuthController {
         String password;
     }
 
+    @Operation(summary = "Autenticar usuario y generar token JWT")
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) {
         log.info("Intento de login: {}", request.getEmail());
