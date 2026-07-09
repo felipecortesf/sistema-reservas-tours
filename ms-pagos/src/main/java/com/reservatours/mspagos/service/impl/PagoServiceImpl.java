@@ -5,6 +5,9 @@ import com.reservatours.mspagos.model.Pago;
 import com.reservatours.mspagos.repository.PagoRepository;
 import com.reservatours.mspagos.service.PagoService;
 import com.reservatours.mspagos.exception.ResourceNotFoundException;
+import com.reservatours.mspagos.exception.PagoYaConfirmadoException;
+import com.reservatours.mspagos.client.ReservaClient;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +23,7 @@ public class PagoServiceImpl implements PagoService {
     private static final Logger log = LoggerFactory.getLogger(PagoServiceImpl.class);
     private final PagoRepository repository;
     private final com.reservatours.mspagos.kafka.PagoEventProducer eventProducer;
+    private final ReservaClient reservaClient;
 
     private PagoDto toDto(Pago p) {
         return new PagoDto(p.getId(), p.getReservaId(), p.getClienteNombre(),
@@ -81,14 +85,38 @@ public class PagoServiceImpl implements PagoService {
     @Transactional
     public PagoDto confirmarPago(Long id) {
         log.info("Confirmando pago con id: {}", id);
-        return repository.findById(id).map(pago -> {
-            pago.setEstado("PAGADO");
-            pago.setFechaPago(LocalDateTime.now());
-            log.info("Pago confirmado para cliente: {}", pago.getClienteNombre());
-            PagoDto saved = toDto(repository.save(pago));
-            eventProducer.publicarPagoConfirmado(saved);
-            return saved;
-        }).orElseThrow(() -> new ResourceNotFoundException("No se puede confirmar, pago no encontrado con ID: " + id));
+        Pago pago = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se puede confirmar, pago no encontrado con ID: " + id));
+
+        if ("PAGADO".equals(pago.getEstado())) {
+            log.warn("El pago con id: {} ya se encuentra confirmado", id);
+            throw new PagoYaConfirmadoException("El pago con ID: " + id + " ya se encuentra confirmado");
+        }
+
+        validarReservaAsociada(pago.getReservaId());
+
+        pago.setEstado("PAGADO");
+        pago.setFechaPago(LocalDateTime.now());
+        log.info("Pago confirmado para cliente: {}", pago.getClienteNombre());
+        PagoDto saved = toDto(repository.save(pago));
+        eventProducer.publicarPagoConfirmado(saved);
+        return saved;
+    }
+
+    /**
+     * Valida (via Feign) que la reserva asociada al pago exista en ms-reservas antes de confirmar.
+     */
+    private void validarReservaAsociada(Long reservaId) {
+        try {
+            log.info("Validando reserva asociada via ms-reservas para reservaId: {}", reservaId);
+            reservaClient.getReservaById(reservaId);
+        } catch (FeignException.NotFound e) {
+            log.warn("Reserva no encontrada en ms-reservas, id: {}", reservaId);
+            throw new ResourceNotFoundException("No existe la reserva asociada al pago (reservaId: " + reservaId + ")");
+        } catch (FeignException e) {
+            log.error("Error de comunicacion remota con ms-reservas: {}", e.getMessage());
+            throw new RuntimeException("No se pudo validar la reserva asociada al pago: " + e.getMessage());
+        }
     }
     @Override
     @Transactional
