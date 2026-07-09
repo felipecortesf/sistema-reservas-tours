@@ -173,4 +173,78 @@ class ReservaServiceImplTest {
         assertEquals(1, resultado.size());
         verify(repository, times(1)).findByFechaTour(LocalDate.of(2026, 8, 1));
     }
+
+    @Test
+    void findByTelefono_retornaReservasDelTelefono() {
+        when(repository.findByClienteTelefono("56912345678")).thenReturn(List.of(reserva));
+
+        List<ReservaDto> resultado = service.findByTelefono("56912345678");
+
+        assertEquals(1, resultado.size());
+        assertEquals("Juan Perez", resultado.get(0).getClienteNombre());
+        verify(repository, times(1)).findByClienteTelefono("56912345678");
+    }
+
+    @Test
+    void contarConfirmadasPorTour_retornaConteo() {
+        when(repository.contarConfirmadasPorTour(1L)).thenReturn(3L);
+
+        Long resultado = service.contarConfirmadasPorTour(1L);
+
+        assertEquals(3L, resultado);
+        verify(repository, times(1)).contarConfirmadasPorTour(1L);
+    }
+
+    @Test
+    void findReservasProximas_retornaListaDeReservasProximas() {
+        when(repository.findReservasProximas(7)).thenReturn(List.of(reserva));
+
+        List<ReservaDto> resultado = service.findReservasProximas(7);
+
+        assertEquals(1, resultado.size());
+        verify(repository, times(1)).findReservasProximas(7);
+    }
+
+    @Test
+    void enviarNotificacionesDiaSiguiente_conReservasPendientes_enviaWhatsappYMarcaNotificadas() {
+        LocalDate manana = LocalDate.now().plusDays(1);
+        Reserva reservaPendiente = new Reserva(2L, "Pedro Soto", "56911111111", "pedro@email.com",
+                3L, "Pan de Azucar", manana, LocalTime.of(9, 0),
+                "Hotel Leme", "Guia Carlos", "CONFIRMADA", false, LocalDateTime.now());
+
+        when(repository.findByFechaTourAndNotificacionEnviada(manana, false)).thenReturn(List.of(reservaPendiente));
+        when(repository.save(any(Reserva.class))).thenAnswer(i -> i.getArgument(0));
+
+        service.enviarNotificacionesDiaSiguiente();
+
+        verify(whatsappClient, times(1)).enviarMensaje(any());
+        verify(repository, times(1)).save(argThat(r -> Boolean.TRUE.equals(r.getNotificacionEnviada())));
+    }
+
+    @Test
+    void enviarNotificacionesDiaSiguiente_sinReservasPendientes_noEnviaNiGuarda() {
+        LocalDate manana = LocalDate.now().plusDays(1);
+        when(repository.findByFechaTourAndNotificacionEnviada(manana, false)).thenReturn(List.of());
+
+        service.enviarNotificacionesDiaSiguiente();
+
+        verify(whatsappClient, never()).enviarMensaje(any());
+        verify(repository, never()).save(any(Reserva.class));
+    }
+
+    @Test
+    void enviarNotificacionesDiaSiguiente_errorEnWhatsapp_igualMarcaNotificacionEnviada() {
+        LocalDate manana = LocalDate.now().plusDays(1);
+        Reserva reservaPendiente = new Reserva(2L, "Pedro Soto", "56911111111", "pedro@email.com",
+                3L, "Pan de Azucar", manana, LocalTime.of(9, 0),
+                "Hotel Leme", "Guia Carlos", "CONFIRMADA", false, LocalDateTime.now());
+
+        when(repository.findByFechaTourAndNotificacionEnviada(manana, false)).thenReturn(List.of(reservaPendiente));
+        doThrow(new RuntimeException("ms-whatsapp caido")).when(whatsappClient).enviarMensaje(any());
+        when(repository.save(any(Reserva.class))).thenAnswer(i -> i.getArgument(0));
+
+        assertDoesNotThrow(() -> service.enviarNotificacionesDiaSiguiente());
+
+        verify(repository, times(1)).save(any(Reserva.class));
+    }
 }
