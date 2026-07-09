@@ -231,6 +231,25 @@ Al crear una reserva (`POST /api/v1/reservas`), ms-reservas publica un evento co
 - **ms-gateway** (8080): punto de entrada único, enruta a los 10 microservicios de negocio usando Service Discovery (`lb://nombre-servicio`)
 - Los FeignClients usan descubrimiento por nombre (sin URLs hardcodeadas), excepto donde Eureka no está disponible
 
+### Rutas del Gateway (puerto 8080)
+
+Todas las rutas están definidas en `ms-gateway/src/main/resources/application.properties`:
+
+| Ruta (prefijo) | Microservicio destino |
+|---|---|
+| `/api/v1/usuarios/**` | ms-usuarios |
+| `/api/v1/tours/**` | ms-catalogo-tours |
+| `/api/v1/reservas/**` | ms-reservas |
+| `/api/v1/notificaciones/**` | ms-notificaciones |
+| `/api/v1/embarques/**` | ms-embarques |
+| `/api/v1/mensajes/**` | ms-comunicacion-agencia |
+| `/api/v1/reportes/**` | ms-reportes |
+| `/api/v1/whatsapp/**` | ms-whatsapp |
+| `/api/v1/notificaciones-push/**` | ms-notificaciones-push |
+| `/api/v1/pagos/**` | ms-pagos |
+
+Nota: `/api/v1/auth/login` no tiene ruta propia en el Gateway; se accede directo a ms-usuarios en `http://localhost:8081/api/v1/auth/login`.
+
 ### Ejemplo
 ```bash
 # A través del Gateway (puerto único 8080)
@@ -239,22 +258,62 @@ curl http://localhost:8080/api/v1/tours
 curl http://localhost:8080/api/v1/pagos
 ```
 
+## Documentación Swagger / OpenAPI
+
+Cada microservicio expone su propia UI de Swagger (springdoc-openapi) en su puerto individual:
+
+| Microservicio | Swagger UI (local) |
+|---|---|
+| ms-usuarios | http://localhost:8081/swagger-ui.html |
+| ms-catalogo-tours | http://localhost:8082/swagger-ui.html |
+| ms-reservas | http://localhost:8083/swagger-ui.html |
+| ms-notificaciones | http://localhost:8084/swagger-ui.html |
+| ms-embarques | http://localhost:8085/swagger-ui.html |
+| ms-comunicacion-agencia | http://localhost:8086/swagger-ui.html |
+| ms-reportes | http://localhost:8087/swagger-ui.html |
+| ms-whatsapp | http://localhost:8088/swagger-ui.html |
+| ms-notificaciones-push | http://localhost:8089/swagger-ui.html |
+| ms-pagos | http://localhost:8090/swagger-ui.html |
+
+El JSON de OpenAPI está disponible en `/api-docs` de cada microservicio (ej: `http://localhost:8083/api-docs`).
+
 ## Pruebas Unitarias — JUnit 5 + Mockito
 
-Tests unitarios de la capa de servicio con mocks de repositorios, cubriendo casos exitosos, casos de error (ResourceNotFoundException) y reglas de negocio.
+Tests unitarios de la capa Service (mocks de repositorios/clientes Feign), Controller (mocks del Service) y GlobalExceptionHandler (llamadas directas a los métodos), cubriendo casos exitosos, casos de error y reglas de negocio en los 10 microservicios de negocio.
 
-| Microservicio | Tests | Casos destacados |
-|---|---|---|
-| ms-reservas | 7 | save() asigna estado CONFIRMADA por defecto, findById lanza excepción si no existe |
-| ms-catalogo-tours | 7 | reducirCupo() con y sin stock disponible |
-| ms-pagos | 7 | confirmarPago() cambia estado PENDIENTE → PAGADO |
+| Microservicio | Tests Service | Tests Controller | Tests ExceptionHandler | Casos destacados |
+|---|---|---|---|---|
+| ms-catalogo-tours | 9 | 9 | 5 | reducirCupo() lanza `CuposAgotadosException` sin stock |
+| ms-reservas | 9 | 10 | 4 | save() valida cupos vía Feign antes de crear la reserva |
+| ms-pagos | 9 | 11 | 4 | confirmarPago() valida reserva remota y evita doble confirmación |
+| ms-usuarios | 7 | 9 (Usuario + Auth) | 3 | login exitoso/fallido con JWT |
+| ms-embarques | 7 | 9 | 3 | — |
+| ms-notificaciones | 7 | 7 | 3 | — |
+| ms-notificaciones-push | 7 | 8 | 3 | — |
+| ms-comunicacion-agencia | 7 | 8 | 3 | — |
+| ms-reportes | 7 | 6 | 3 | — |
+| ms-whatsapp | 8 | 6 | 3 | — |
 
 ### Ejecutar tests
 ```bash
 cd ms-reservas && ./mvnw test
 cd ms-catalogo-tours && ./mvnw test
 cd ms-pagos && ./mvnw test
+# ... (mismo comando en cada uno de los 10 microservicios de negocio)
 ```
+
+### Cobertura de código (JaCoCo)
+
+Cada microservicio tiene configurado `jacoco-maven-plugin` (excluyendo clases de configuración, DTOs, entidades, Kafka y clientes Feign del cálculo, ya que son boilerplate sin lógica). Para generar el reporte HTML y verificar el umbral del 80%:
+
+```bash
+cd ms-reservas
+./mvnw clean verify
+# Reporte HTML en: target/site/jacoco/index.html
+# El build falla en la fase "verify" si la cobertura de línea baja del 80%
+```
+
+`./mvnw test` (sin `verify`) siempre genera el reporte pero no bloquea el build si la cobertura es menor al umbral — así la ejecución de tests durante la defensa nunca se ve interrumpida por el chequeo de cobertura.
 
 ## Despliegue
 
